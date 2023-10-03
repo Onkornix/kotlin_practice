@@ -1,79 +1,72 @@
-object Use {
-    //val input:String = readln()
-    val input:String = "hello world"
-    val inputList: MutableList<Char> = mutableListOf()}
-   /* val StringIntegerMap = mapOf(
-        'a' to 0, 'b' to 1, 'c' to 2, 'd' to 3, 'e' to 4, 'f' to 5, 'g' to 6,
-        'h' to 7, 'i' to 8, 'j' to 9, 'k' to 10, 'l' to 11, 'm' to 12, 'n' to 13,
-        'o' to 14, 'p' to 15, 'q' to 16, 'r' to 17, 's' to 18, 't' to 19, 'u' to 20,
-        'v' to 21, 'w' to 22, 'x' to 23, 'y' to 24, 'z' to 25,
-        )*/
 
-    val StringIntegerTable: List<String> = listOf("a","b","c","d","e")
+//val input:String = readln()
+val input:String = "hello"
+val inputList: MutableList<Char> = mutableListOf()
+val StringIntegerMap: Map<Char, Int> = mapOf(
+    'a' to 0, 'b' to 1, 'c' to 2, 'd' to 3, 'e' to 4, 'f' to 5, 'g' to 6,
+    'h' to 7, 'i' to 8, 'j' to 9, 'k' to 10, 'l' to 11, 'm' to 12, 'n' to 13,
+    'o' to 14, 'p' to 15, 'q' to 16, 'r' to 17, 's' to 18, 't' to 19, 'u' to 20,
+    'v' to 21, 'w' to 22, 'x' to 23, 'y' to 24, 'z' to 25,
+)
+
 fun main(){
     //println(StringIntegerTable.indexOf("a"))
     println("Enter a sentence or word and it will get alphabetized")
-    for (l in Use.input){
-        Use.inputList.add(l)
+    for (l in input){
+        inputList.add(l)
     }
-    if (' ' in Use.inputList) { // start sentence sorting
+    if (' ' in inputList) { // start sentence sorting
         // Detach words separated by spaces and add them to a wordList
         // convert and sort only the first Char of each word
         val wordBuild: MutableList<Char> = mutableListOf() // base for dissecting sentence and building individual words
         val wordList: MutableList<String> = mutableListOf() // base for adding words to list
-        for (l in Use.inputList){
-
+        val charWordMap: MutableMap<Char, String> = mutableMapOf()
+        for (l in inputList){
             // conditions
             when {
                 (l == ' ') -> { //when space is encountered
                     wordList.add(wordBuild.joinToString("")) // concat wordBuild and add to wordList
                     wordBuild.clear()
                 }
-                (l == Use.inputList.last()) -> { //when last letter is reached
+                (l == inputList.last()) -> { //when last letter is reached
                     wordBuild.add(l)
                     wordList.add(wordBuild.joinToString("")) // concat wordBuild and add to wordList
                     wordBuild.clear()
                 }
+                else -> wordBuild.add(l)
             }
-            // if no conditions
-            wordBuild.add(l)
         }
-        print(wordList)
+        print(wordList[0])
+
     }
     else { // start word sorting
-
+        val charIntList: MutableList<Int> = mutableListOf()
+        for (l in inputList){
+            charIntList.add(StringIntegerMap[l]!!)
+        }
+        print(sort(charIntList))
     }
 }
-fun sentence() {
-
-}
-fun word(inputWord:MutableList<Char>) {
-    //sort whole word alphabetically
-}
-/*fun convert(inType:String,convertee:String): Pair<Int,String> {
-
-    /*
-   Alphabetical Map of Chars and corresponding Int
-
-   Converting Char to an Int
-   AND
-   Converting Int to Char
-    */
-
-    when (inType) {
-        "str" -> {
-            for (l in StringIntegerTable){
-                return Pair((StringIntegerTable.indexOf(convertee)),"mt")
-            }
-        }
-        "int" -> {
-
-        }
-    }
-}
-*/
-
-fun sort(sortee:MutableList<Int>) {
+fun sort(sortee:MutableList<Int>): List<Int> {
     // Sorting the list of Ints into smallest to largest
     // return sorted list
+    var temp: Int
+    var min: Int
+    // [7, 4, 11, 11, 14]
+    for ( i in 0..sortee.size ){
+        min = i
+
+        for (j in i+1..sortee.size){
+            println("i= ${i}, min= ${sortee[min]}, j= ${sortee[j]}")
+            if (sortee[min] > sortee[j]) {
+                min = j
+
+            }
+        }
+        println("${sortee[min]}, ${sortee[1]}")
+        temp = sortee[i]
+        sortee[i] = sortee[min]
+        sortee[min] = temp
+    }
+    return sortee
 }
