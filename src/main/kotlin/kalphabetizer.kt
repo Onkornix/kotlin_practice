@@ -20,7 +20,7 @@ fun main(){
         // convert and sort only the first Char of each word
         val wordBuild: MutableList<Char> = mutableListOf() // base for dissecting sentence and building individual words
         val wordList: MutableList<String> = mutableListOf() // base for adding words to list
-        val charWordMap: MutableMap<Char, String> = mutableMapOf()
+        //val charWordMap: MutableMap<Char, String> = mutableMapOf()
         for (l in inputList){
             // conditions
             when {
@@ -39,34 +39,30 @@ fun main(){
         print(wordList[0])
 
     }
-    else { // start word sorting
-        val charIntList: MutableList<Int> = mutableListOf()
-        for (l in inputList){
-            charIntList.add(StringIntegerMap[l]!!)
-        }
-        print(sort(charIntList))
-    }
-}
-fun sort(sortee:MutableList<Int>): List<Int> {
-    // Sorting the list of Ints into smallest to largest
-    // return sorted list
-    var temp: Int
-    var min: Int
-    // [7, 4, 11, 11, 14]
-    for ( i in 0..sortee.size ){
-        min = i
 
-        for (j in i+1..sortee.size){
-            println("i= ${i}, min= ${sortee[min]}, j= ${sortee[j]}")
-            if (sortee[min] > sortee[j]) {
-                min = j
 
-            }
+
+
+    // Sorting a single word.
+    else {
+
+
+
+        // breaking up, changing to Int, replacing
+        val charIntList: MutableList<Int> = mutableListOf() // character to integer list init
+        for (c in inputList){ // taking Characters
+            charIntList.add(StringIntegerMap[c]!!) //
         }
-        println("${sortee[min]}, ${sortee[1]}")
-        temp = sortee[i]
-        sortee[i] = sortee[min]
-        sortee[min] = temp
+
+
+        //sorting (kinda messed up how easy it is lol. I don't even need to convert it to Int)
+        charIntList.sort()
+
+
+        //
+        val intCharList: MutableList<Char> = mutableListOf()
+        for (i in charIntList){ // taking integers
+            intCharList.add(StringIntegerMap.filterValues { it == i }.keys)
+        }
     }
-    return sortee
 }
