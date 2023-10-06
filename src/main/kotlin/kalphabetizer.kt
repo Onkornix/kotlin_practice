@@ -1,6 +1,6 @@
 
 //val input:String = readln()
-val input:String = "hello"
+val input:String = "hello world"
 val inputList: MutableList<Char> = mutableListOf()
 val StringIntegerMap: Map<Char, Int> = mapOf(
     'a' to 0, 'b' to 1, 'c' to 2, 'd' to 3, 'e' to 4, 'f' to 5, 'g' to 6,
@@ -16,27 +16,32 @@ fun main(){
         inputList.add(l)
     }
     if (' ' in inputList) { // start sentence sorting
-        // Detach words separated by spaces and add them to a wordList
-        // convert and sort only the first Char of each word
+
+        //some vars i guess
+        val wordMap: MutableMap<String, Int> = mutableMapOf()
         val wordBuild: MutableList<Char> = mutableListOf() // base for dissecting sentence and building individual words
         val wordList: MutableList<String> = mutableListOf() // base for adding words to list
+        var iteration: Int = 0
+
         //val charWordMap: MutableMap<Char, String> = mutableMapOf()
         for (l in inputList){
             // conditions
+
             when {
                 (l == ' ') -> { //when space is encountered
-                    wordList.add(wordBuild.joinToString("")) // concat wordBuild and add to wordList
+                    wordMap[wordBuild.joinToString("")] = iteration // concat wordBuild and add to wordList
                     wordBuild.clear()
+                    iteration++
                 }
                 (l == inputList.last()) -> { //when last letter is reached
                     wordBuild.add(l)
-                    wordList.add(wordBuild.joinToString("")) // concat wordBuild and add to wordList
+                    wordMap[wordBuild.joinToString("")] = iteration // concat wordBuild and add to wordList
                     wordBuild.clear()
                 }
-                else -> wordBuild.add(l)
+                else -> wordBuild.add(l) //for every other letter
             }
         }
-        print(wordList[0])
+        println(wordMap)
 
     }
 
@@ -45,8 +50,6 @@ fun main(){
 
     // Sorting a single word.
     else {
-
-
 
         // breaking up, changing to Int, replacing
         val charIntList: MutableList<Int> = mutableListOf() // character to integer list init
@@ -59,10 +62,16 @@ fun main(){
         charIntList.sort()
 
 
-        //
-        val intCharList: MutableList<Char> = mutableListOf()
+        //getting Character keys from Map using Integer values
+        val lastStringList: MutableList<String> = mutableListOf()
         for (i in charIntList){ // taking integers
-            intCharList.add(StringIntegerMap.filterValues { it == i }.keys)
+            //intCharList.add()
+            val filterValues = StringIntegerMap.filterValues { it == i }
+            lastStringList.add(filterValues.keys.joinToString())
+
         }
+        //finally done.
+        print(lastStringList.joinToString(""))
+
     }
 }
