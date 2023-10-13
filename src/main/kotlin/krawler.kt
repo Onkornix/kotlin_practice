@@ -5,7 +5,10 @@ import kotlin.random.*
 val crawlingDialogue = listOf(
     "you move along and find a "
 )
-val newlines = "\n\n\n\n\n\n\n\n\n\n\n"
+val deathDialogue = listOf(
+    "you died lol"
+)
+const val newlines = "\n\n\n\n\n\n\n\n\n\n\n"
 var isAlive = true
 
 
@@ -13,17 +16,19 @@ var isAlive = true
 val playerStats = mutableMapOf(
     "MaxHP" to 100,
     "CurrentHP" to 100,
-    "BaseDamage" to 10,
+    "BaseDamage" to 50,
     "Level" to 1
 )
-val playerInventory: MutableMap<String, Int> = mutableMapOf()
+val playerInventory: MutableList<String> = mutableListOf()
+
+
 
 
 
 //Classes
 class Enemy () {
     //try implementing weighted pools if you can figure those out.
-    val existingEnemies = listOf(
+    private val existingEnemies = listOf(
         "Goblin"
     )
     val enemyStats = mapOf(
@@ -35,26 +40,8 @@ class Enemy () {
     val engagement = existingEnemies[Random.nextInt(existingEnemies.size)]
 }
 
-//maybe use class for item stuff
+
 class Item () {
-
-
-
-    /*
-    #  this is the problem child.
-    #  weighted pools will be my downfall.
-    #  come up with something please, thanks.
-
-    maybe a function that takes the random Int input from the post battle
-    and checks it against a bunch of IntRanges in a when statement.
-     */
-    val itemDropPool: Map<IntRange, String> = mapOf(
-        1..10 to "HealPot",
-        11..15 to "DMGboost",
-        16..17 to "LevelUp"
-
-    )
-
 
     val itemStats = mapOf(
         /*
@@ -75,7 +62,50 @@ class Item () {
         //level up items
         "LevelUp" to listOf(2, 1)
     )
+
+    private val amountOfItemsInInventory: MutableMap<String, Int> = mutableMapOf()
+    private fun addToInventory(itemToAdd: String){
+        playerInventory.add(playerInventory.size, itemToAdd)
+    }
+    fun getWeightedItemPool(randomIn:Int){
+        when (randomIn){
+            in 1..10 -> {
+                println("HealPot")
+                addToInventory("HealPot")
+            }
+            in 11..15 -> {
+                println("DMGboost")
+                addToInventory("DMGboost")
+            }
+            in 16..17 -> {
+                println("LevelUp")
+                addToInventory("LevelUp")
+            }
+        }
+    }
+
+    fun getItemsInInventory(listOfItems: List<String>){
+        /*
+        create a map where the key is the item and the value is the amount
+        ex:
+            "HealPot" = 3,
+            "DMGboost" = 1
+         */
+        for (item in listOfItems){
+            if (item !in amountOfItemsInInventory.keys){
+                amountOfItemsInInventory.run { put(item, 1)}
+            }
+            else {
+                val increase = amountOfItemsInInventory[item]!! + 1
+                amountOfItemsInInventory.run { replace(item, increase) }
+            }
+        }
+        for (itemKey in amountOfItemsInInventory.keys){
+            println("${amountOfItemsInInventory[itemKey]} x $itemKey")
+        }
+    }
 }
+
 //Hella functions
 
 //this is literally just for printing a varying number of dots
@@ -105,9 +135,10 @@ fun fightEnemy(){
     //creating enemy
     val enemy = Enemy()
     val enemyInFight = enemy.engagement
+    var actionCondition: String
     print(newlines)
 
-    while (enemy.enemyStats[enemyInFight]!!["HP"]!! != 0) {
+    while (enemy.enemyStats[enemyInFight]!!["HP"]!! > 0) {
 
         //printing enemy stats and possible player actions
         println(
@@ -125,13 +156,16 @@ fun fightEnemy(){
                             "dealing ${playerStats["BaseDamage"]!! * playerStats["Level"]!!} damage",
                 )
                 enemy.enemyStats[enemyInFight]!!["HP"] = enemy.enemyStats[enemyInFight]!!["HP"]!! - (playerStats["BaseDamage"]!! * playerStats["Level"]!!)
+                actionCondition = "a"
             }
             "i" -> {
-                println("implement this please")
+                val item = Item()
+                item.getItemsInInventory(playerInventory)
+                actionCondition = "i"
             }
             "s" -> {
                 printPlayerCurrentStats()
-
+                actionCondition = "s"
             }
             "d" -> {
                 isAlive = false
@@ -144,19 +178,33 @@ fun fightEnemy(){
             }
 
         }
-        Thread.sleep(1500)
-        print(newlines)
-        Thread.sleep(1000)
 
-        //enemy action
-        println("The vile $enemyInFight hits you and deals ${enemy.enemyStats[enemyInFight]!!["DMG"]} damage \n\n")
-        playerStats["CurrentHP"] = (playerStats["CurrentHP"]!! - enemy.enemyStats[enemyInFight]!!["DMG"]!!)
-        Thread.sleep(1500)
+        //if player chose the attack action, and the enemy is not dead, player receives damage
+        if (actionCondition == "a" && enemy.enemyStats[enemyInFight]!!["HP"]!! > 0 ){
+
+            //waiting and creating newlines for enemy attack text
+            Thread.sleep(1500)
+            print(newlines)
+            Thread.sleep(1000)
+
+            //enemy attack
+            println("The vile $enemyInFight hits you and deals ${enemy.enemyStats[enemyInFight]!!["DMG"]} damage \n\n") //display attack text
+            playerStats["CurrentHP"] = (playerStats["CurrentHP"]!! - enemy.enemyStats[enemyInFight]!!["DMG"]!!) //change player health
+            Thread.sleep(1500)
+        } else {
+            continue
+        }
+
+
     }
 
-
+    val newItem = Item()
     println("congratulations! you defeated the $enemyInFight!! " +
-            "And it dropped 1")
+            "And it dropped:")
+    for (i in 1..3){
+        newItem.getWeightedItemPool(Random.nextInt(17))
+
+    }
 }
 
 
@@ -169,11 +217,11 @@ fun play () {
         println(crawlingDialogue[0])
         dots(Random.nextInt(5))
 
-        //fight function (just so i can keep things organized and modular(?))
+        //fight function (just so I can keep things organized and modular(?))
         fightEnemy()
 
         //end for testing
-        isAlive = false
+        //isAlive = false
     }
 }
 fun main(){
