@@ -1,5 +1,5 @@
 # Kotlin Practice
-I'm learning Kotlin for my high school robotics team's software subteam.
+I'm learning Kotlin for my high school robotics team's software subteam, AND for my AP CSP course.
 These projects are being developed in IntelliJ IDEA Community Edition
 
 ### What's in here?
