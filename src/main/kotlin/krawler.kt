@@ -21,20 +21,21 @@ val playerStats = mutableMapOf(
 )
 val playerInventory: MutableList<String> = mutableListOf()
 
-
-
-
-
 //Classes
 class Enemy () {
     //try implementing weighted pools if you can figure those out.
     private val existingEnemies = listOf(
-        "Goblin"
+        "Goblin",
+        "Trenton"
     )
     val enemyStats = mapOf(
         "Goblin" to mutableMapOf(
             "HP" to 50,
             "DMG" to 5
+        ),
+        "Trenton" to mutableMapOf(
+            "HP" to 100,
+            "DMG" to 2
         )
     )
     val engagement = existingEnemies[Random.nextInt(existingEnemies.size)]
@@ -63,7 +64,7 @@ class Item () {
         "LevelUp" to listOf(2, 1)
     )
 
-    private val amountOfItemsInInventory: MutableMap<String, Int> = mutableMapOf()
+    private val mapOfItemsAndCount: MutableMap<String, Int> = mutableMapOf()
     private fun addToInventory(itemToAdd: String){
         playerInventory.add(playerInventory.size, itemToAdd)
     }
@@ -84,24 +85,24 @@ class Item () {
         }
     }
 
-    fun getItemsInInventory(listOfItems: List<String>){
+    fun getItemsInInventory(){
         /*
         create a map where the key is the item and the value is the amount
         ex:
             "HealPot" = 3,
             "DMGboost" = 1
          */
-        for (item in listOfItems){
-            if (item !in amountOfItemsInInventory.keys){
-                amountOfItemsInInventory.run { put(item, 1)}
+        for (item in playerInventory){
+            if (item !in mapOfItemsAndCount.keys){
+                mapOfItemsAndCount.run { put(item, 1)}
             }
             else {
-                val increase = amountOfItemsInInventory[item]!! + 1
-                amountOfItemsInInventory.run { replace(item, increase) }
+                val increase = mapOfItemsAndCount[item]!! + 1
+                mapOfItemsAndCount.run { replace(item, increase) }
             }
         }
-        for (itemKey in amountOfItemsInInventory.keys){
-            println("${amountOfItemsInInventory[itemKey]} x $itemKey")
+        for (itemKey in mapOfItemsAndCount.keys){
+            println("`${mapOfItemsAndCount[itemKey]} x $itemKey")
         }
     }
 }
@@ -127,6 +128,7 @@ fun printPlayerCurrentStats() {
     println("Max Health: ${playerStats["MaxHP"]}, Current Health: ${playerStats["CurrentHP"]}, \n" +
             "Base Damage: ${playerStats["BaseDamage"]}, Level: ${playerStats["Level"]}")
 }
+
 
 
 //main combat loop after enemy encounter
@@ -160,12 +162,14 @@ fun fightEnemy(){
             }
             "i" -> {
                 val item = Item()
-                item.getItemsInInventory(playerInventory)
+                item.getItemsInInventory()
+                println("action: ")
                 actionCondition = "i"
             }
             "s" -> {
                 printPlayerCurrentStats()
                 actionCondition = "s"
+                Thread.sleep(2000)
             }
             "d" -> {
                 isAlive = false
