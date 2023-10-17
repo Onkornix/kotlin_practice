@@ -6,7 +6,11 @@ val crawlingDialogue = listOf(
     "you move along and find a "
 )
 val deathDialogue = listOf(
-    "you died lol"
+    "empty",
+    "you died lol",
+    "Rip L",
+    "Glad you died"
+
 )
 const val newlines = "\n\n\n\n\n\n\n\n\n\n\n"
 var isAlive = true
@@ -44,7 +48,7 @@ class Enemy () {
 
 class Item () {
 
-    val itemStats = mapOf(
+    private val itemStats: Map<String, List<Int>> = mapOf(
         /*
         index 0 = effect type
         index 1 = magnitude
@@ -64,10 +68,10 @@ class Item () {
         "LevelUp" to listOf(2, 1)
     )
 
-    private val mapOfItemsAndCount: MutableMap<String, Int> = mutableMapOf()
     private fun addToInventory(itemToAdd: String){
         playerInventory.add(playerInventory.size, itemToAdd)
     }
+
     fun getWeightedItemPool(randomIn:Int){
         when (randomIn){
             in 1..10 -> {
@@ -85,24 +89,49 @@ class Item () {
         }
     }
 
-    fun getItemsInInventory(){
+    private val orderedInvMap: MutableMap<String, Int> = mutableMapOf()
+    private val itemListForIndexingOrderedInvMap: MutableList<String> = mutableListOf()
+
+    fun getItemsInInventory() {
         /*
         create a map where the key is the item and the value is the amount
         ex:
-            "HealPot" = 3,
-            "DMGboost" = 1
+            "HealPot" to 3,
+            "DMGboost" to 1
+
+         and create a list of the entries, so they can be indexed and more easily referenced
          */
-        for (item in playerInventory){
-            if (item !in mapOfItemsAndCount.keys){
-                mapOfItemsAndCount.run { put(item, 1)}
-            }
-            else {
-                val increase = mapOfItemsAndCount[item]!! + 1
-                mapOfItemsAndCount.run { replace(item, increase) }
+
+
+        for (item in playerInventory) {
+            if (item !in orderedInvMap.keys) {
+                orderedInvMap.run { put(item, 1) }
+            } else {
+                val increase = orderedInvMap[item]!! + 1
+                orderedInvMap.run { replace(item, increase) }
             }
         }
-        for (itemKey in mapOfItemsAndCount.keys){
-            println("`${mapOfItemsAndCount[itemKey]} x $itemKey")
+
+        for (itemKey in orderedInvMap.keys) {
+            itemListForIndexingOrderedInvMap.add(itemKey)
+            println(
+                "[${itemListForIndexingOrderedInvMap.indexOf(itemKey)}]  " +
+                        "$itemKey x ${orderedInvMap[itemKey]}"
+            )
+        }
+    }
+
+    fun useItem(itemIndexInput: Int){
+        when (itemStats[itemListForIndexingOrderedInvMap[0]]!![0]){
+            0 -> {
+                playerStats["CurrentHP"] = playerStats["CurrentHP"]!! + itemStats[itemListForIndexingOrderedInvMap[0]]!![1]
+            }
+            1 -> {
+
+            }
+            2 -> {
+
+            }
         }
     }
 }
@@ -129,7 +158,10 @@ fun printPlayerCurrentStats() {
             "Base Damage: ${playerStats["BaseDamage"]}, Level: ${playerStats["Level"]}")
 }
 
-
+fun pressEnterToContinue(){
+    println("Press ENTER to continue: ")
+    readln()
+}
 
 //main combat loop after enemy encounter
 fun fightEnemy(){
@@ -137,7 +169,7 @@ fun fightEnemy(){
     //creating enemy
     val enemy = Enemy()
     val enemyInFight = enemy.engagement
-    var actionCondition: String
+    var actionCondition: Boolean = false
     print(newlines)
 
     while (enemy.enemyStats[enemyInFight]!!["HP"]!! > 0) {
@@ -147,7 +179,7 @@ fun fightEnemy(){
             "$enemyInFight: \n\n Health: ${enemy.enemyStats[enemyInFight]!!["HP"]}   " +
                     "Damage: ${enemy.enemyStats[enemyInFight]!!["DMG"]} \n\n" +
                     "Your Health: ${playerStats["CurrentHP"]} \n" +
-                    "Your actions:   (a)ttack, (i)ventory, (s)tats, (d)ie"
+                    "Your actions:   (a)ttack, (i)ventory, (s)tats"
 
         )
         //player action
@@ -158,23 +190,35 @@ fun fightEnemy(){
                             "dealing ${playerStats["BaseDamage"]!! * playerStats["Level"]!!} damage",
                 )
                 enemy.enemyStats[enemyInFight]!!["HP"] = enemy.enemyStats[enemyInFight]!!["HP"]!! - (playerStats["BaseDamage"]!! * playerStats["Level"]!!)
-                actionCondition = "a"
+                actionCondition = true
             }
             "i" -> {
                 val item = Item()
                 item.getItemsInInventory()
-                println("action: ")
-                actionCondition = "i"
+                println("\naction: (u)se item, (r)eturn to battle")
+                val action: String = readln()
+                when (action){
+                    "u" -> {
+                        println("enter item number: ")
+                        val itemIndexInput: Int = readln().toInt()
+                        item.useItem(itemIndexInput)
+                    }
+                    "r" -> {
+                        continue
+                    }
+                }
+
             }
             "s" -> {
                 printPlayerCurrentStats()
-                actionCondition = "s"
-                Thread.sleep(2000)
+                pressEnterToContinue()
             }
+            /*
             "d" -> {
                 isAlive = false
                 break
             }
+            */
             else -> {
                 println("mistakes are important, but never do that again")
                 isAlive = false
@@ -184,7 +228,7 @@ fun fightEnemy(){
         }
 
         //if player chose the attack action, and the enemy is not dead, player receives damage
-        if (actionCondition == "a" && enemy.enemyStats[enemyInFight]!!["HP"]!! > 0 ){
+        if (actionCondition && enemy.enemyStats[enemyInFight]!!["HP"]!! > 0){
 
             //waiting and creating newlines for enemy attack text
             Thread.sleep(1500)
@@ -209,6 +253,7 @@ fun fightEnemy(){
         newItem.getWeightedItemPool(Random.nextInt(17))
 
     }
+    pressEnterToContinue()
 }
 
 
@@ -227,6 +272,9 @@ fun play () {
         //end for testing
         //isAlive = false
     }
+    //when isAlive == false
+    print(newlines)
+    println(deathDialogue[Random.nextInt(3)])
 }
 fun main(){
     //First dialogue to establish game
