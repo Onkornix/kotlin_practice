@@ -3,10 +3,11 @@ import kotlin.random.*
 
 //misc variables
 val crawlingDialogue = listOf(
-    "you move along and find a "
+    "you move along and find a ",
+    "proceeding forward, you encounter a",
+    "as you travel onward you see a"
 )
 val deathDialogue = listOf(
-    "empty",
     "you died lol",
     "Rip L",
     "Glad you died"
@@ -21,13 +22,15 @@ val playerStats = mutableMapOf(
     "MaxHP" to 100,
     "CurrentHP" to 100,
     "BaseDamage" to 50,
-    "Level" to 1
+    "Level" to 1,
+    "BonusDamage" to 0
 )
 val playerInventory: MutableList<String> = mutableListOf()
 
 //Classes
 class Enemy () {
     //try implementing weighted pools if you can figure those out.
+    //also add different drop pools for different enemies
     private val existingEnemies = listOf(
         "Goblin",
         "Trenton"
@@ -38,7 +41,7 @@ class Enemy () {
             "DMG" to 5
         ),
         "Trenton" to mutableMapOf(
-            "HP" to 100,
+            "HP" to 50,
             "DMG" to 2
         )
     )
@@ -121,18 +124,40 @@ class Item () {
         }
     }
 
-    fun useItem(itemIndexInput: Int){
-        when (itemStats[itemListForIndexingOrderedInvMap[0]]!![0]){
-            0 -> {
-                playerStats["CurrentHP"] = playerStats["CurrentHP"]!! + itemStats[itemListForIndexingOrderedInvMap[0]]!![1]
-            }
-            1 -> {
+    fun useItem(itemIndexInput: Int, amount: Int){
+        val useItemName = itemListForIndexingOrderedInvMap[itemIndexInput]
+        var useTotal = 0
+        var useAmount = amount //so it's mutable
 
-            }
-            2 -> {
-
-            }
+        if (useAmount > orderedInvMap[useItemName]!!) {
+            println("cannot use that many. Using ${orderedInvMap[useItemName]} instead")
+            useAmount = orderedInvMap[useItemName]!!
         }
+
+        while (useTotal < useAmount){
+            when (itemStats[useItemName]!![0]){
+                0 -> {
+                    playerStats["CurrentHP"] = playerStats["CurrentHP"]!! + itemStats[useItemName]!![1]
+                    if (playerStats["CurrentHP"]!! > playerStats["MaxHP"]!!) {
+                        playerStats["CurrentHP"] = playerStats["MaxHP"]!!
+                    }
+                    //println(playerStats["CurrentHP"])
+                }
+                1 -> {
+                    playerStats["BonusDamage"] = playerStats["BonusDamage"]!! + itemStats[useItemName]!![1]
+                }
+                2 -> {
+                    //if the player has enough tokens they can level up.
+                }
+            }
+            useTotal++
+        }
+
+        println(playerInventory)
+        //removes used item from inventory
+        playerInventory.run { removeAt(indexOf(useItemName)) }
+        println(playerInventory)
+
     }
 }
 
@@ -156,6 +181,9 @@ fun dots(amountOfDots: Int) {
 fun printPlayerCurrentStats() {
     println("Max Health: ${playerStats["MaxHP"]}, Current Health: ${playerStats["CurrentHP"]}, \n" +
             "Base Damage: ${playerStats["BaseDamage"]}, Level: ${playerStats["Level"]}")
+    if (playerStats["BonusDamage"] != 0){
+        println("\nBonus Damage: ${playerStats["BonusDamage"]}")
+    }
 }
 
 fun pressEnterToContinue(){
@@ -169,7 +197,7 @@ fun fightEnemy(){
     //creating enemy
     val enemy = Enemy()
     val enemyInFight = enemy.engagement
-    var actionCondition: Boolean = false
+    var actionCondition = false
     print(newlines)
 
     while (enemy.enemyStats[enemyInFight]!!["HP"]!! > 0) {
@@ -189,7 +217,7 @@ fun fightEnemy(){
                     "You swing your sword and strike the $enemyInFight, " +
                             "dealing ${playerStats["BaseDamage"]!! * playerStats["Level"]!!} damage",
                 )
-                enemy.enemyStats[enemyInFight]!!["HP"] = enemy.enemyStats[enemyInFight]!!["HP"]!! - (playerStats["BaseDamage"]!! * playerStats["Level"]!!)
+                enemy.enemyStats[enemyInFight]!!["HP"] = enemy.enemyStats[enemyInFight]!!["HP"]!! - (playerStats["BaseDamage"]!! + playerStats["BonusDamage"]!!)
                 actionCondition = true
             }
             "i" -> {
@@ -201,7 +229,9 @@ fun fightEnemy(){
                     "u" -> {
                         println("enter item number: ")
                         val itemIndexInput: Int = readln().toInt()
-                        item.useItem(itemIndexInput)
+                        println("how many to use: ")
+                        val amount: Int = readln().toInt()
+                        item.useItem(itemIndexInput,amount)
                     }
                     "r" -> {
                         continue
@@ -249,7 +279,7 @@ fun fightEnemy(){
     val newItem = Item()
     println("congratulations! you defeated the $enemyInFight!! " +
             "And it dropped:")
-    for (i in 1..3){
+    for (i in 0..Random.nextInt(from = 1, until = 3)){
         newItem.getWeightedItemPool(Random.nextInt(17))
 
     }
@@ -263,7 +293,7 @@ fun play () {
     while (isAlive){
 
         //start with a dialogue for moving through dungeon
-        println(crawlingDialogue[0])
+        println(crawlingDialogue[Random.nextInt(3)])
         dots(Random.nextInt(5))
 
         //fight function (just so I can keep things organized and modular(?))
