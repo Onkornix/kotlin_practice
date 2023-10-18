@@ -150,14 +150,10 @@ class Item () {
                     //if the player has enough tokens they can level up.
                 }
             }
+            //removes used item from inventory
+            playerInventory.run { removeAt(indexOf(useItemName)) }
             useTotal++
         }
-
-        println(playerInventory)
-        //removes used item from inventory
-        playerInventory.run { removeAt(indexOf(useItemName)) }
-        println(playerInventory)
-
     }
 }
 
@@ -211,7 +207,7 @@ fun fightEnemy(){
 
         )
         //player action
-        when (readln()) {
+        when (readln().lowercase()) {
             "a" -> {
                 println(
                     "You swing your sword and strike the $enemyInFight, " +
@@ -224,7 +220,7 @@ fun fightEnemy(){
                 val item = Item()
                 item.getItemsInInventory()
                 println("\naction: (u)se item, (r)eturn to battle")
-                val action: String = readln()
+                val action: String = readln().lowercase()
                 when (action){
                     "u" -> {
                         println("enter item number: ")
@@ -243,16 +239,9 @@ fun fightEnemy(){
                 printPlayerCurrentStats()
                 pressEnterToContinue()
             }
-            /*
-            "d" -> {
-                isAlive = false
-                break
-            }
-            */
             else -> {
                 println("mistakes are important, but never do that again")
-                isAlive = false
-                break
+                actionCondition = true
             }
 
         }
@@ -287,7 +276,12 @@ fun fightEnemy(){
 }
 
 
-fun play () {
+
+fun main(){
+    //First dialogue to establish game
+    println("Welcome to the Dungeon! ")
+    Thread.sleep(3000)
+
 
     //creating player character
     while (isAlive){
@@ -299,17 +293,10 @@ fun play () {
         //fight function (just so I can keep things organized and modular(?))
         fightEnemy()
 
-        //end for testing
-        //isAlive = false
     }
+
     //when isAlive == false
     print(newlines)
     println(deathDialogue[Random.nextInt(3)])
-}
-fun main(){
-    //First dialogue to establish game
-    println("Welcome to the Dungeon! ")
-    Thread.sleep(3000)
 
-    play()
 }
