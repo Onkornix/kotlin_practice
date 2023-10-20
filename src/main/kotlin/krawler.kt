@@ -23,6 +23,7 @@ val playerStats = mutableMapOf(
     "CurrentHP" to 100,
     "BaseDamage" to 50,
     "Level" to 1,
+    "TokensNeeded" to 12,
     "BonusDamage" to 0
 )
 val playerInventory: MutableList<String> = mutableListOf()
@@ -51,7 +52,7 @@ class Enemy () {
 
 class Item () {
 
-    private val itemStats: Map<String, List<Int>> = mapOf(
+    val itemStats: Map<String, List<Int>> = mapOf(
         /*
         index 0 = effect type
         index 1 = magnitude
@@ -68,7 +69,8 @@ class Item () {
         "DMGboost" to listOf(1, 20),
 
         //level up items
-        "LevelUp" to listOf(2, 1)
+        "LevelUp" to listOf(2, 1),
+        "token" to listOf(2, 0)
     )
 
     private fun addToInventory(itemToAdd: String){
@@ -92,8 +94,8 @@ class Item () {
         }
     }
 
-    private val orderedInvMap: MutableMap<String, Int> = mutableMapOf()
-    private val itemListForIndexingOrderedInvMap: MutableList<String> = mutableListOf()
+    val orderedInvMap: MutableMap<String, Int> = mutableMapOf()
+    val itemListForIndexingOrderedInvMap: MutableList<String> = mutableListOf()
 
     fun getItemsInInventory() {
         /*
@@ -137,27 +139,65 @@ class Item () {
         while (useTotal < useAmount){
             when (itemStats[useItemName]!![0]){
                 0 -> {
-                    playerStats["CurrentHP"] = playerStats["CurrentHP"]!! + itemStats[useItemName]!![1]
+                    playerStats.run {
+                        (getValue("CurrentHP") + itemStats[useItemName]!![1]).also {
+                            set("CurrentHP", it)
+                        }
+                    }
                     if (playerStats["CurrentHP"]!! > playerStats["MaxHP"]!!) {
                         playerStats["CurrentHP"] = playerStats["MaxHP"]!!
                     }
                     //println(playerStats["CurrentHP"])
                 }
                 1 -> {
-                    playerStats["BonusDamage"] = playerStats["BonusDamage"]!! + itemStats[useItemName]!![1]
+                    playerStats.run {
+                        (getValue("BonusDamage") + itemStats[useItemName]!![1]).also {
+                            set("BonusDamage", it)
+                        }
+                    }
                 }
                 2 -> {
-                    //if the player has enough tokens they can level up.
+                    levelUpCheck()
                 }
             }
             //removes used item from inventory
-            playerInventory.run { removeAt(indexOf(useItemName)) }
-            useTotal++
+            if (itemStats[useItemName]!![0] != 2) {
+                playerInventory.run { removeAt(indexOf(useItemName)) }
+                useTotal++
+            }
         }
+    }
+    fun getLevelUpTokens(): Int {
+        val quantity = Random.nextInt(from = 12, until = 100)
+
+        for (a in 0..quantity) playerInventory.add(playerInventory.size,"token" )
+
+        return quantity
     }
 }
 
 //Hella functions
+fun levelUpCheck(){
+    var tokenCount = 0
+    for (index in 0..<playerInventory.size){
+        if (playerInventory[index] == "token"){
+            tokenCount++
+        }
+    }
+
+    if (tokenCount >= playerStats["TokensNeeded"]!!){
+        playerStats["Level"] = playerStats["Level"]!! + 1
+        playerStats.run {
+            (getValue("TokensNeeded")+(getValue("TokensNeeded"))/2).also {
+                set("TokensNeeded",it)
+            }
+        }
+        for (index in 1..playerStats["TokensNeeded"]!!){
+            playerInventory.remove("token")
+        }
+    }else println("not enough to level up")
+}
+
 
 //this is literally just for printing a varying number of dots
 fun dots(amountOfDots: Int) {
@@ -225,6 +265,11 @@ fun fightEnemy(){
                     "u" -> {
                         println("enter item number: ")
                         val itemIndexInput: Int = readln().toInt()
+                        //if the item is "LevelUp" don't ask for how many
+                         if (item.itemStats[item.itemListForIndexingOrderedInvMap[itemIndexInput]]!![0] == 2) {
+                            item.useItem(itemIndexInput,1)
+                            continue
+                        }
                         println("how many to use: ")
                         val amount: Int = readln().toInt()
                         item.useItem(itemIndexInput,amount)
@@ -272,6 +317,7 @@ fun fightEnemy(){
         newItem.getWeightedItemPool(Random.nextInt(17))
 
     }
+    println("You also acquired ${newItem.getLevelUpTokens()} Level up tokens")
     pressEnterToContinue()
 }
 
