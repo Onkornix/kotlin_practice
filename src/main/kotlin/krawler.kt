@@ -1,4 +1,4 @@
-import kotlin.random.*
+import kotlin.random.Random
 
 
 //misc variables
@@ -21,15 +21,15 @@ var isAlive = true
 val playerStats = mutableMapOf(
     "MaxHP" to 100,
     "CurrentHP" to 100,
-    "BaseDamage" to 50,
+    "BaseDamage" to 10,
     "Level" to 1,
-    "TokensNeeded" to 12,
+    "TokensNeeded" to 19,
     "BonusDamage" to 0
 )
 val playerInventory: MutableList<String> = mutableListOf()
 
 //Classes
-class Enemy () {
+class Enemy {
     //try implementing weighted pools if you can figure those out.
     //also add different drop pools for different enemies
     private val existingEnemies = listOf(
@@ -50,9 +50,9 @@ class Enemy () {
 }
 
 
-class Item () {
+class Item {
 
-    val itemStats: Map<String, List<Int>> = mapOf(
+    private val itemStats: Map<String, List<Int>> = mapOf(
         /*
         index 0 = effect type
         index 1 = magnitude
@@ -94,19 +94,10 @@ class Item () {
         }
     }
 
-    val orderedInvMap: MutableMap<String, Int> = mutableMapOf()
+    private val orderedInvMap: MutableMap<String, Int> = mutableMapOf()
     val itemListForIndexingOrderedInvMap: MutableList<String> = mutableListOf()
 
     fun getItemsInInventory() {
-        /*
-        create a map where the key is the item and the value is the amount
-        ex:
-            "HealPot" to 3,
-            "DMGboost" to 1
-
-         and create a list of the entries, so they can be indexed and more easily referenced
-         */
-
 
         for (item in playerInventory) {
             if (item !in orderedInvMap.keys) {
@@ -145,9 +136,9 @@ class Item () {
                         }
                     }
                     if (playerStats["CurrentHP"]!! > playerStats["MaxHP"]!!) {
-                        playerStats["CurrentHP"] = playerStats["MaxHP"]!!
+                        playerStats.run { set("CurrentHP", getValue("MaxHP")) }
                     }
-                    //println(playerStats["CurrentHP"])
+                    //println(main.kotlin.getPlayerStats["CurrentHP"])
                 }
                 1 -> {
                     playerStats.run {
@@ -157,7 +148,12 @@ class Item () {
                     }
                 }
                 2 -> {
-                    levelUpCheck()
+                    playerStats.run {
+                        (getValue("Level") + itemStats[useItemName]!![1]).also {
+                            set("Level", it + itemStats[useItemName]!![0])
+
+                        }
+                    }
                 }
             }
             //removes used item from inventory
@@ -168,7 +164,7 @@ class Item () {
         }
     }
     fun getLevelUpTokens(): Int {
-        val quantity = Random.nextInt(from = 12, until = 100)
+        val quantity = Random.nextInt(from = 2, until = 5)
 
         for (a in 0..quantity) playerInventory.add(playerInventory.size,"token" )
 
@@ -186,20 +182,38 @@ fun levelUpCheck(){
     }
 
     if (tokenCount >= playerStats["TokensNeeded"]!!){
-        playerStats["Level"] = playerStats["Level"]!! + 1
+
+        // increase level, MaxHP, BaseDamage
         playerStats.run {
-            (getValue("TokensNeeded")+(getValue("TokensNeeded"))/2).also {
-                set("TokensNeeded",it)
-            }
+            getValue("Level").also{ set("Level", it + 1) }
+            getValue("MaxHP").also{ set("MaxHP", it + 20) }
+            getValue("BaseDamage").also{ set("BaseDamage", it + 5) }
         }
+
+        // print something
+        println("Level Up! \n" +
+                "Level: ${playerStats["Level"]!! - 1} -> ${playerStats["Level"]}\n" +
+                "Max HP: ${playerStats["MaxHP"]!! - 20} -> ${playerStats["MaxHP"]}\n" +
+                "Base Damage: ${playerStats["BaseDamage"]!! - 5} -> ${playerStats["BaseDamage"]}\n")
+        pressEnterToContinue()
+
+        // removing spent tokens
         for (index in 1..playerStats["TokensNeeded"]!!){
             playerInventory.remove("token")
         }
+
+        // increase TokensNeeded
+        playerStats.run {
+            (getValue("TokensNeeded") + (getValue("TokensNeeded"))/2).also {
+                set("TokensNeeded", it)
+            }
+        }
+
     }else println("not enough to level up")
 }
 
 
-//this is literally just for printing a varying number of dots
+//this is literally just for printing a varying number of main.kotlin.dots
 fun dots(amountOfDots: Int) {
     Thread.sleep(500)
     print(".")
@@ -227,7 +241,7 @@ fun pressEnterToContinue(){
     readln()
 }
 
-//main combat loop after enemy encounter
+//main.kotlin.main combat loop after enemy encounter
 fun fightEnemy(){
 
     //creating enemy
@@ -235,6 +249,9 @@ fun fightEnemy(){
     val enemyInFight = enemy.engagement
     var actionCondition = false
     print(newlines)
+
+    // removing bonus damage
+    playerStats["BonusDamage"] = 0
 
     while (enemy.enemyStats[enemyInFight]!!["HP"]!! > 0) {
 
@@ -248,38 +265,54 @@ fun fightEnemy(){
         )
         //player action
         when (readln().lowercase()) {
+
+            //attack enemy
             "a" -> {
                 println(
                     "You swing your sword and strike the $enemyInFight, " +
                             "dealing ${playerStats["BaseDamage"]!! * playerStats["Level"]!!} damage",
                 )
-                enemy.enemyStats[enemyInFight]!!["HP"] = enemy.enemyStats[enemyInFight]!!["HP"]!! - (playerStats["BaseDamage"]!! + playerStats["BonusDamage"]!!)
+                Thread.sleep(1000)
+                enemy.enemyStats[enemyInFight]!!.run {
+                    (getValue("HP") - (playerStats["BaseDamage"]!! + playerStats["BonusDamage"]!!)).also {
+                        set("HP", it)
+                    }
+                }
                 actionCondition = true
             }
+
+            //access inventory
             "i" -> {
                 val item = Item()
                 item.getItemsInInventory()
                 println("\naction: (u)se item, (r)eturn to battle")
                 val action: String = readln().lowercase()
                 when (action){
+
+                    //use item
                     "u" -> {
                         println("enter item number: ")
                         val itemIndexInput: Int = readln().toInt()
-                        //if the item is "LevelUp" don't ask for how many
-                         if (item.itemStats[item.itemListForIndexingOrderedInvMap[itemIndexInput]]!![0] == 2) {
-                            item.useItem(itemIndexInput,1)
-                            continue
+
+                        //if the item is "token" don't ask for how many
+                         if (item.itemListForIndexingOrderedInvMap[itemIndexInput] == "token") {
+                            levelUpCheck()
+                        } else {
+                             println("how many to use: ")
+                             val amount: Int = readln().toInt()
+                             item.useItem(itemIndexInput,amount)
                         }
-                        println("how many to use: ")
-                        val amount: Int = readln().toInt()
-                        item.useItem(itemIndexInput,amount)
                     }
+
+                    //return to battle
                     "r" -> {
                         continue
                     }
                 }
 
             }
+
+            //stats
             "s" -> {
                 printPlayerCurrentStats()
                 pressEnterToContinue()
@@ -294,14 +327,20 @@ fun fightEnemy(){
         //if player chose the attack action, and the enemy is not dead, player receives damage
         if (actionCondition && enemy.enemyStats[enemyInFight]!!["HP"]!! > 0){
 
-            //waiting and creating newlines for enemy attack text
+            //waiting and creating main.kotlin.newlines for enemy attack text
             Thread.sleep(1500)
             print(newlines)
             Thread.sleep(1000)
 
             //enemy attack
             println("The vile $enemyInFight hits you and deals ${enemy.enemyStats[enemyInFight]!!["DMG"]} damage \n\n") //display attack text
-            playerStats["CurrentHP"] = (playerStats["CurrentHP"]!! - enemy.enemyStats[enemyInFight]!!["DMG"]!!) //change player health
+
+            //change player health
+            playerStats.run {
+                (getValue("CurrentHP") - enemy.enemyStats[enemyInFight]!!["DMG"]!!). also {
+                    set("CurrentHP", it)
+                }
+            }
             Thread.sleep(1500)
         } else {
             continue
@@ -311,13 +350,23 @@ fun fightEnemy(){
     }
 
     val newItem = Item()
-    println("congratulations! you defeated the $enemyInFight!! " +
-            "And it dropped:")
+    println("congratulations! you defeated the $enemyInFight!! And it dropped:")
+    Thread.sleep(1500)
+
+    //dispense items
     for (i in 0..Random.nextInt(from = 1, until = 3)){
+        Thread.sleep(750)
         newItem.getWeightedItemPool(Random.nextInt(17))
 
     }
+
+    //dispense tokens
+    Thread.sleep(750)
     println("You also acquired ${newItem.getLevelUpTokens()} Level up tokens")
+
+
+    Thread.sleep(1000)
+    print("\n")
     pressEnterToContinue()
 }
 
@@ -341,7 +390,7 @@ fun main(){
 
     }
 
-    //when isAlive == false
+    //when main.kotlin.isAlive == false
     print(newlines)
     println(deathDialogue[Random.nextInt(3)])
 
